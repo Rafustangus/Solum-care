@@ -1,0 +1,46 @@
+{
+  "name": "solumcare-tattoo-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Solum-care - gestión y seguimiento de curación de tatuajes",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . && node scripts/check-imports.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "perf:measure": "node scripts/perf/measure.mjs",
+    "verify": "npm run lint && npm test && npm run build && npm run audit:prod"
+  },
+  "dependencies": {
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@supabase/supabase-js": "^2.119.0",
+    "lucide-react": "^1.70.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@vitejs/plugin-react": "6.2.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.14.0",
+    "jsdom": "^31.0.1",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.7",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EFECE6"/>
+      <stop offset="1" stop-color="#D8D2C6"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="600" fill="url(#bg2)"/>
+  <path d="M95 330c52-111 181-152 290-58 41 36 60 79 51 125-12 59-67 94-128 79-74-18-83-105-29-146 48-37 122-24 144 33 14 36 1 74-31 92" fill="none" stroke="#9E9B7A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M113 357c45-83 147-108 227-45 31 25 47 58 41 89-8 40-47 62-87 54-55-11-67-76-26-106 32-24 82-14 98 23" fill="none" stroke="#3A2E2B" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="364" cy="351" r="17" fill="#B35C3E"/>
+  <circle cx="119" cy="393" r="9" fill="#3A2E2B"/>
+  <text x="30" y="555" font-family="Georgia, serif" font-size="20" fill="#3A2E2B" opacity=".45">evidencia · día 2</text>
+</svg>
