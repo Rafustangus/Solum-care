@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Solum-care - gestión y seguimiento de curación de tatuajes",
+  "license": "UNLICENSED",
   "engines": {
     "node": ">=24"
   },

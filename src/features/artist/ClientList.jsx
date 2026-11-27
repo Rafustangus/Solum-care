@@ -8,8 +8,10 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { Input } from '../../components/ui/Input'
 import { PhotoImage } from '../../components/ui/PhotoImage'
 import { ProgressBar } from '../../components/ui/ProgressBar'
+import { useAppData } from '../../context/AppDataContext'
 import {
   CLIENT_STATUS_META,
+  getCarePlan,
   getClientStatus,
   getHealingDay,
   getLatestPhoto
@@ -25,6 +27,7 @@ const FILTERS = [
 const STATUS_WEIGHT = { alert: 0, pending: 1, ok: 2 }
 
 export function ClientList({ clients, onSelect, onNewClient, selectedClientId = null }) {
+  const { careTemplates } = useAppData()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
 
@@ -32,6 +35,7 @@ export function ClientList({ clients, onSelect, onNewClient, selectedClientId = 
     return clients
       .map((client) => ({
         client,
+        plan: getCarePlan(client.technique, careTemplates),
         healing: getHealingDay(client.startDate, client.durationDays),
         status: getClientStatus(client),
         photo: getLatestPhoto(client)
@@ -50,7 +54,7 @@ export function ClientList({ clients, onSelect, onNewClient, selectedClientId = 
         if (weight !== 0) return weight
         return a.client.name.localeCompare(b.client.name, 'es')
       })
-  }, [clients, filter, query])
+  }, [clients, careTemplates, filter, query])
 
   const counts = useMemo(
     () => ({
@@ -142,7 +146,7 @@ export function ClientList({ clients, onSelect, onNewClient, selectedClientId = 
         </Card>
       ) : (
         <ul className="space-y-2">
-          {rows.map(({ client, healing, status, photo }) => {
+          {rows.map(({ client, plan, healing, status, photo }) => {
             const meta = CLIENT_STATUS_META[status]
             return (
               <li key={client.id}>
@@ -170,7 +174,7 @@ export function ClientList({ clients, onSelect, onNewClient, selectedClientId = 
                       </Badge>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-coffee-soft">
-                      {client.tattooZone || 'Sin zona'} · {client.technique}
+                      {client.tattooZone || 'Sin zona'} · {plan.label}
                     </p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <ProgressBar

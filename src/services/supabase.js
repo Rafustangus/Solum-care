@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getDataMode } from '../lib/dataMode'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -15,9 +16,12 @@ export const supabase = isSupabaseConfigured
     })
   : null
 
-export const dataMode = import.meta.env.VITE_DATA_MODE || 'mock'
+export const dataMode = getDataMode()
 
 export function requireSupabase() {
+  if (dataMode !== 'supabase') {
+    throw new Error('VITE_DATA_MODE debe ser supabase para usar Supabase.')
+  }
   if (!supabase) {
     throw new Error(
       'Supabase no está configurado. Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.'

@@ -10,3 +10,4 @@ docs/
 AGENTS.md
 .git-root-owned-backup/
 .dist-root-owned-backup/
+.node-modules-root-owned-backup/

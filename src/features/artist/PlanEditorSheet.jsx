@@ -15,18 +15,13 @@ import {
   TECHNIQUES
 } from '../../lib/healing'
 
-const TECHNIQUE_OPTIONS = Object.values(TECHNIQUES).map((technique) => ({
-  value: technique.id,
-  label: technique.label
-}))
-
 const FREQUENCY_OPTIONS = Object.values(PHOTO_FREQUENCIES).map((frequency) => ({
   value: frequency.id,
   label: frequency.label
 }))
 
 export function PlanEditorSheet({ open, onClose, client }) {
-  const { updatePlan } = useAppData()
+  const { updatePlan, listCareTemplates } = useAppData()
   const { pushToast, notify } = useNotifications()
   const [form, setForm] = useState(null)
   const [error, setError] = useState('')
@@ -52,6 +47,17 @@ export function PlanEditorSheet({ open, onClose, client }) {
     setForm((previous) => ({ ...previous, [field]: value }))
   }
 
+  const techniqueOptions = [
+    ...Object.values(TECHNIQUES).map((technique) => ({
+      value: technique.id,
+      label: `Estándar · ${technique.label}`
+    })),
+    ...listCareTemplates().map((template) => ({
+      value: template.id,
+      label: `Del estudio · ${template.name}`
+    }))
+  ]
+
   function handleSubmit(event) {
     event.preventDefault()
     setError('')
@@ -62,15 +68,20 @@ export function PlanEditorSheet({ open, onClose, client }) {
       return
     }
 
-    updatePlan(client.id, {
-      technique: form.technique,
-      startDate: form.startDate,
-      durationDays: Number(form.durationDays),
-      photoFrequency: form.photoFrequency,
-      tattooZone: form.tattooZone.trim(),
-      phone: form.phone.trim(),
-      planNotes: form.planNotes.trim()
-    })
+    try {
+      updatePlan(client.id, {
+        technique: form.technique,
+        startDate: form.startDate,
+        durationDays: Number(form.durationDays),
+        photoFrequency: form.photoFrequency,
+        tattooZone: form.tattooZone.trim(),
+        phone: form.phone.trim(),
+        planNotes: form.planNotes.trim()
+      })
+    } catch (error) {
+      setError(error.message)
+      return
+    }
     pushToast({
       title: 'Plan actualizado',
       message: `${client.name.split(' ')[0]} recibirá el aviso del cambio.`,
@@ -109,10 +120,10 @@ export function PlanEditorSheet({ open, onClose, client }) {
         </div>
 
         <Select
-          label="Técnica"
+          label="Pauta de curación"
           value={form.technique}
           onChange={(event) => update('technique', event.target.value)}
-          options={TECHNIQUE_OPTIONS}
+          options={techniqueOptions}
         />
 
         <div className="grid grid-cols-2 gap-2">

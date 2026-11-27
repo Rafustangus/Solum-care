@@ -8,12 +8,12 @@ import { useAppData } from '../../context/AppDataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
 import { formatLongDate } from '../../lib/dates'
-import { getFrequency, getTechnique } from '../../lib/healing'
+import { getCarePlan, getFrequency } from '../../lib/healing'
 import { DemoRoleSwitch } from '../settings/DemoRoleSwitch'
 
 export function ClientProfile({ client }) {
   const { user, logout } = useAuth()
-  const { settings } = useAppData()
+  const { settings, careTemplates } = useAppData()
   const {
     remindersEnabled,
     permission,
@@ -24,7 +24,7 @@ export function ClientProfile({ client }) {
   } = useNotifications()
 
   const remindersOn = remindersEnabled && permission === 'granted'
-  const technique = getTechnique(client?.technique)
+  const plan = getCarePlan(client?.technique, careTemplates)
   const frequency = getFrequency(client?.photoFrequency)
   const whatsapp = String(settings?.studioWhatsApp || '').replace(/[^\d]/g, '')
 
@@ -56,7 +56,7 @@ export function ClientProfile({ client }) {
           </div>
           <dl className="space-y-2 text-sm">
             <Row label="Zona" value={client.tattooZone || 'Sin indicar'} />
-            <Row label="Técnica" value={technique.label} />
+            <Row label="Pauta" value={plan.label} />
             <Row label="Inicio" value={formatLongDate(client.startDate)} />
             <Row label="Duración" value={`${client.durationDays} días`} />
             <Row label="Fotos" value={frequency.label} />

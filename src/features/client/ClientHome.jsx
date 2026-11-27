@@ -16,6 +16,7 @@ import { useClock } from '../../hooks/useClock'
 import { relativeTime } from '../../lib/dates'
 import {
   generateChecklist,
+  getCarePlan,
   getHealingDay,
   isPhotoPending
 } from '../../lib/healing'
@@ -33,7 +34,7 @@ function greeting(hour) {
 
 export function ClientHome({ client, onNavigate }) {
   const { user } = useAuth()
-  const { notes, toggleTask, settings } = useAppData()
+  const { notes, toggleTask, settings, careTemplates } = useAppData()
   const {
     remindersEnabled,
     permission,
@@ -64,9 +65,10 @@ export function ClientHome({ client, onNavigate }) {
   const technique = client?.technique
   const durationDays = client?.durationDays
   const checklist = client?.checklist
+  const plan = useMemo(() => getCarePlan(technique, careTemplates), [technique, careTemplates])
   const tasks = useMemo(
-    () => (clientId ? generateChecklist(technique, day, durationDays) : []),
-    [clientId, technique, durationDays, day]
+    () => (clientId ? generateChecklist(plan, day, durationDays) : []),
+    [clientId, plan, durationDays, day]
   )
   const completed = useMemo(() => checklist?.[String(day)] || [], [checklist, day])
   const handleToggle = useCallback(
@@ -109,7 +111,7 @@ export function ClientHome({ client, onNavigate }) {
       </div>
 
       <div className="space-y-3">
-        <HealingCounter client={client} healing={healing} />
+        <HealingCounter client={client} healing={healing} plan={plan} />
 
         <DayStrip
           client={client}

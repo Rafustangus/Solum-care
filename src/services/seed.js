@@ -1,5 +1,5 @@
 import { assetUrl } from '../lib/assets'
-import { addDaysISO, daysAgoISO, parseISODate, toISODate } from '../lib/dates'
+import { daysAgoISO, parseISODate, toISODate } from '../lib/dates'
 import { generateChecklist, getHealingDay } from '../lib/healing'
 
 export const SEED_VERSION = 4
@@ -409,6 +409,7 @@ export function createSeedData() {
     clients,
     notes,
     notifications,
+    careTemplates: [],
     settings: {
       studioWhatsApp: '+34 600 123 456',
       studioEmail: 'hola@solumcare.app',
@@ -423,10 +424,4 @@ export function getSeedClientPlan(technique = 'second-skin') {
     durationDays: technique === 'friction-zone' ? 21 : 14,
     photoFrequency: 'daily'
   }
-}
-
-export function nextPhotoDate(client) {
-  if (!client) return null
-  const healing = getHealingDay(client.startDate, client.durationDays)
-  return addDaysISO(new Date(), 1 - healing.day)
 }

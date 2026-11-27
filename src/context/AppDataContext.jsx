@@ -7,10 +7,18 @@ import {
   useRef,
   useState
 } from 'react'
+import {
+  createCareTemplateId,
+  isCareTemplateAllowed,
+  listStudioCareTemplates,
+  normalizeCareTemplateInput,
+  validateCareTemplateInput
+} from '../lib/careTemplates'
 import { generateId } from '../lib/crypto'
 import { nowISOString } from '../lib/dates'
 import { canModifyNote, markNotesRead as readNotes } from '../lib/notes'
-import { loadData, resetData, saveData } from '../services/api'
+import { canAccessStudioData, canManageStudioData } from '../lib/permissions'
+import { loadData, resetData, saveData } from '../services/repository'
 import { clearPhotos } from '../services/photoStore'
 import { useAuth } from './AuthContext'
 
@@ -53,7 +61,13 @@ function photoPreview(note = '') {
 
 export function AppDataProvider({ children }) {
   const { user } = useAuth()
-  const [data, setData] = useState(() => loadData())
+  const [data, setData] = useState(() => {
+    const loaded = loadData()
+    return {
+      ...loaded,
+      careTemplates: Array.isArray(loaded.careTemplates) ? loaded.careTemplates : []
+    }
+  })
   const saveTimer = useRef(null)
   const latestData = useRef(data)
 
@@ -153,6 +167,99 @@ export function AppDataProvider({ children }) {
     })
   }, [])
 
+  const listCareTemplates = useCallback(() => {
+    if (!canAccessStudioData(user, user?.studioId)) return []
+    return listStudioCareTemplates(latestData.current.careTemplates, user.studioId)
+  }, [user])
+
+  const createCareTemplate = useCallback(
+    (input) => {
+      if (!canManageStudioData(user) || !user.studioId) {
+        throw new Error('Solo un artista activo puede crear pautas de curación.')
+      }
+      const error = validateCareTemplateInput(input, {
+        templates: latestData.current.careTemplates,
+        studioId: user.studioId
+      })
+      if (error) throw new Error(error)
+
+      const template = {
+        id: createCareTemplateId(),
+        studioId: user.studioId,
+        ...normalizeCareTemplateInput(input),
+        createdAt: nowISOString(),
+        updatedAt: null
+      }
+      setData((previous) => ({
+        ...previous,
+        careTemplates: [...(previous.careTemplates || []), template]
+      }))
+      return template
+    },
+    [user]
+  )
+
+  const updateCareTemplate = useCallback(
+    (templateId, input) => {
+      if (!canAccessStudioData(user, user?.studioId)) {
+        throw new Error('Solo el estudio puede editar sus pautas de curación.')
+      }
+      const existing = latestData.current.careTemplates.find(
+        (template) => template.id === templateId && template.studioId === user.studioId
+      )
+      if (!existing) throw new Error('No se ha encontrado la pauta de curación.')
+
+      const error = validateCareTemplateInput(input, {
+        templates: latestData.current.careTemplates,
+        studioId: user.studioId,
+        templateId
+      })
+      if (error) throw new Error(error)
+
+      const updated = {
+        ...existing,
+        ...normalizeCareTemplateInput(input),
+        updatedAt: nowISOString()
+      }
+      setData((previous) => ({
+        ...previous,
+        careTemplates: previous.careTemplates.map((template) =>
+          template.id === templateId ? updated : template
+        )
+      }))
+      return updated
+    },
+    [user]
+  )
+
+  const deleteCareTemplate = useCallback(
+    (templateId) => {
+      if (!canAccessStudioData(user, user?.studioId)) {
+        throw new Error('Solo el estudio puede borrar sus pautas de curación.')
+      }
+      const existing = latestData.current.careTemplates.find(
+        (template) => template.id === templateId && template.studioId === user.studioId
+      )
+      if (!existing) throw new Error('No se ha encontrado la pauta de curación.')
+
+      const inUse = latestData.current.clients.filter(
+        (client) => client.technique === templateId
+      ).length
+      if (inUse) {
+        throw new Error(
+          `No se puede borrar: ${inUse} ${inUse === 1 ? 'cliente la está usando' : 'clientes la están usando'}.`
+        )
+      }
+
+      setData((previous) => ({
+        ...previous,
+        careTemplates: previous.careTemplates.filter((template) => template.id !== templateId)
+      }))
+      return true
+    },
+    [user]
+  )
+
   const toggleTask = useCallback((clientId, day, taskId) => {
     setData((previous) =>
       updateClientInState(previous, clientId, (client) => {
@@ -240,21 +347,35 @@ export function AppDataProvider({ children }) {
     })
   }, [])
 
-  const updatePlan = useCallback((clientId, plan) => {
-    setData((previous) => {
-      const next = updateClientInState(previous, clientId, (client) => ({
-        ...client,
-        ...plan
-      }))
-      return withNotification(next, {
-        audienceRole: 'client',
-        clientId,
-        type: 'plan',
-        title: 'Tu plan de curación se ha actualizado',
-        body: 'Revisa la duración, la técnica y la frecuencia de fotos en tu inicio.'
+  const updatePlan = useCallback(
+    (clientId, plan) => {
+      if (
+        plan.technique &&
+        !isCareTemplateAllowed(
+          plan.technique,
+          latestData.current.careTemplates,
+          user?.studioId
+        )
+      ) {
+        throw new Error('Esa pauta de curación no está disponible para tu estudio.')
+      }
+
+      setData((previous) => {
+        const next = updateClientInState(previous, clientId, (client) => ({
+          ...client,
+          ...plan
+        }))
+        return withNotification(next, {
+          audienceRole: 'client',
+          clientId,
+          type: 'plan',
+          title: 'Tu plan de curación se ha actualizado',
+          body: 'Revisa la duración, la pauta y la frecuencia de fotos en tu inicio.'
+        })
       })
-    })
-  }, [])
+    },
+    [user]
+  )
 
   const reportAlert = useCallback((clientId, symptoms, note) => {
     setData((previous) => {
@@ -381,32 +502,40 @@ export function AppDataProvider({ children }) {
     }))
   }, [user])
 
-  const addClient = useCallback((client) => {
-    const nextClient = {
-      id: client.id || generateId('client'),
-      userId: client.userId || null,
-      studioId: client.studioId || 'studio-solum',
-      assignedArtistId: client.assignedArtistId || null,
-      name: client.name,
-      email: client.email,
-      phone: client.phone || '',
-      tattooZone: client.tattooZone || '',
-      technique: client.technique || 'second-skin',
-      startDate: client.startDate,
-      durationDays: Number(client.durationDays) || 14,
-      photoFrequency: client.photoFrequency || 'daily',
-      planNotes: client.planNotes || '',
-      checklist: client.checklist || {},
-      photos: client.photos || [],
-      alert: null,
-      createdAt: nowISOString()
-    }
-    setData((previous) => ({
-      ...previous,
-      clients: [nextClient, ...previous.clients]
-    }))
-    return nextClient
-  }, [])
+  const addClient = useCallback(
+    (client) => {
+      const studioId = client.studioId || user?.studioId || 'studio-solum'
+      if (!isCareTemplateAllowed(client.technique, latestData.current.careTemplates, studioId)) {
+        throw new Error('Esa pauta de curación no está disponible para tu estudio.')
+      }
+
+      const nextClient = {
+        id: client.id || generateId('client'),
+        userId: client.userId || null,
+        studioId,
+        assignedArtistId: client.assignedArtistId || null,
+        name: client.name,
+        email: client.email,
+        phone: client.phone || '',
+        tattooZone: client.tattooZone || '',
+        technique: client.technique || 'second-skin',
+        startDate: client.startDate,
+        durationDays: Number(client.durationDays) || 14,
+        photoFrequency: client.photoFrequency || 'daily',
+        planNotes: client.planNotes || '',
+        checklist: client.checklist || {},
+        photos: client.photos || [],
+        alert: null,
+        createdAt: nowISOString()
+      }
+      setData((previous) => ({
+        ...previous,
+        clients: [nextClient, ...previous.clients]
+      }))
+      return nextClient
+    },
+    [user]
+  )
 
   const updateSettings = useCallback((patch) => {
     setData((previous) => ({
@@ -427,6 +556,7 @@ export function AppDataProvider({ children }) {
       notes: data.notes,
       notifications: data.notifications,
       settings: data.settings,
+      careTemplates: data.careTemplates || [],
       getClient,
       getClientByUser,
       notificationsFor,
@@ -435,6 +565,10 @@ export function AppDataProvider({ children }) {
       markNotificationRead,
       markAllNotificationsRead,
       markNotesRead,
+      listCareTemplates,
+      createCareTemplate,
+      updateCareTemplate,
+      deleteCareTemplate,
       toggleTask,
       addPhoto,
       reviewPhoto,
@@ -459,6 +593,10 @@ export function AppDataProvider({ children }) {
       markNotificationRead,
       markAllNotificationsRead,
       markNotesRead,
+      listCareTemplates,
+      createCareTemplate,
+      updateCareTemplate,
+      deleteCareTemplate,
       toggleTask,
       addPhoto,
       reviewPhoto,

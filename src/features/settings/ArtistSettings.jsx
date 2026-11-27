@@ -8,6 +8,7 @@ import { useAppData } from '../../context/AppDataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
 import { BrandingSettings } from './BrandingSettings'
+import { CareTemplateSettings } from './CareTemplateSettings'
 import { DemoRoleSwitch } from './DemoRoleSwitch'
 import { ReminderSettings } from './ReminderSettings'
 import { TeamSettings } from './TeamSettings'
@@ -54,6 +55,7 @@ export function ArtistSettings() {
 
       <DemoRoleSwitch />
       <TeamSettings />
+      <CareTemplateSettings />
       <div className="lg:col-span-2">
         <BrandingSettings />
       </div>

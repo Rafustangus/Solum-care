@@ -1,3 +1,5 @@
+import { getCarePlan } from '../../lib/healing'
+
 export const GUIDE_CONTENT = {
   'second-skin': {
     id: 'second-skin',
@@ -152,4 +154,22 @@ export const GUIDE_CONTENT = {
       'Pus o mal olor.'
     ]
   }
+}
+
+export function getGuideContent(techniqueId, templates = []) {
+  const plan = getCarePlan(techniqueId, templates)
+  if (plan.isCustom) {
+    const template = templates.find((item) => item.id === plan.id)
+    if (template?.guide) {
+      return { ...template.guide, id: template.id, label: template.name }
+    }
+  }
+  return { ...(GUIDE_CONTENT[plan.id] || GUIDE_CONTENT['second-skin']) }
+}
+
+export function getGuideOptions(templates = [], selectedId) {
+  const options = Object.values(GUIDE_CONTENT).map(({ id, label }) => ({ id, label }))
+  const selected = templates.find((template) => template.id === selectedId)
+  if (selected) options.unshift({ id: selected.id, label: selected.name })
+  return options
 }

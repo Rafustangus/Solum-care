@@ -5,7 +5,12 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', '.dist-root-owned-backup', '.git-root-owned-backup']),
+  globalIgnores([
+    'dist',
+    '.dist-root-owned-backup',
+    '.git-root-owned-backup',
+    '.node-modules-root-owned-backup'
+  ]),
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {

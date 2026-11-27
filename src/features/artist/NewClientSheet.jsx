@@ -20,11 +20,6 @@ import {
 import { copyText, whatsappUrl } from '../../lib/platform'
 import { isValidEmail } from '../../lib/validation'
 
-const TECHNIQUE_OPTIONS = Object.values(TECHNIQUES).map((technique) => ({
-  value: technique.id,
-  label: technique.label
-}))
-
 const FREQUENCY_OPTIONS = Object.values(PHOTO_FREQUENCIES).map((frequency) => ({
   value: frequency.id,
   label: frequency.label
@@ -43,7 +38,7 @@ const EMPTY_FORM = {
 }
 
 export function NewClientSheet({ open, onClose }) {
-  const { addClient } = useAppData()
+  const { addClient, listCareTemplates } = useAppData()
   const { user, inviteUser } = useAuth()
   const { pushToast } = useNotifications()
   const [form, setForm] = useState(EMPTY_FORM)
@@ -67,6 +62,17 @@ export function NewClientSheet({ open, onClose }) {
   function handleTechnique(value) {
     setForm((previous) => ({ ...previous, technique: value }))
   }
+
+  const techniqueOptions = [
+    ...Object.values(TECHNIQUES).map((technique) => ({
+      value: technique.id,
+      label: `Estándar · ${technique.label}`
+    })),
+    ...listCareTemplates().map((template) => ({
+      value: template.id,
+      label: `Del estudio · ${template.name}`
+    }))
+  ]
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -242,10 +248,10 @@ export function NewClientSheet({ open, onClose }) {
           </div>
 
           <Select
-            label="Técnica"
+            label="Pauta de curación"
             value={form.technique}
             onChange={(event) => handleTechnique(event.target.value)}
-            options={TECHNIQUE_OPTIONS}
+            options={techniqueOptions}
           />
 
           <div className="grid grid-cols-2 gap-2">

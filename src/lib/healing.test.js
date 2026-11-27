@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   generateChecklist,
+  getCarePlan,
   getChecklistProgress,
   getClientStatus,
   getHealingDay,
@@ -77,6 +78,34 @@ describe('fases y checklist', () => {
     expect(ids).toContain('friction-loose')
     expect(ids).toContain('phase-flaking')
     expect(ids).not.toContain('phase-inflammation')
+  })
+
+  it('usa las tareas de una pauta del estudio', () => {
+    const template = {
+      id: 'care-humedo',
+      name: 'Clima húmedo',
+      taskIds: ['friction-check', 'phase-flaking'],
+      studioId: 'studio-solum'
+    }
+    const plan = getCarePlan(template.id, [template])
+    expect(plan).toMatchObject({
+      id: 'care-humedo',
+      label: 'Clima húmedo',
+      isCustom: true
+    })
+
+    const ids = generateChecklist(plan, 5, 21).map((task) => task.id)
+    expect(ids).toContain('wash')
+    expect(ids).toContain('friction-check')
+    expect(ids).toContain('phase-flaking')
+    expect(ids).not.toContain('second-skin-edges')
+  })
+
+  it('cae a la segunda piel ante una pauta desconocida', () => {
+    expect(getCarePlan('care-inexistente')).toMatchObject({
+      id: 'second-skin',
+      isCustom: false
+    })
   })
 
   it('calcula el progreso del checklist', () => {

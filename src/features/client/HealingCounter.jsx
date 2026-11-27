@@ -6,8 +6,8 @@ import { formatLongDate } from '../../lib/dates'
 import { getHealingPhase, getTechnique } from '../../lib/healing'
 
 export const HealingCounter = memo(
-  function HealingCounter({ client, healing }) {
-  const technique = getTechnique(client.technique)
+  function HealingCounter({ client, healing, plan }) {
+  const techniqueLabel = plan?.label || getTechnique(client.technique).label
   const phase = getHealingPhase(healing.day, healing.total)
 
   return (
@@ -42,7 +42,7 @@ export const HealingCounter = memo(
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-cream/55 px-2.5 py-1 text-[0.64rem] font-bold text-coffee">
               <Sparkles className="h-3 w-3 text-clay" />
-              {technique.label}
+              {techniqueLabel}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-cream/55 px-2.5 py-1 text-[0.64rem] font-bold text-coffee">
               <CalendarDays className="h-3 w-3 text-olive-deep" />
@@ -60,6 +60,7 @@ export const HealingCounter = memo(
   (previous, next) =>
     previous.client.startDate === next.client.startDate &&
     previous.client.technique === next.client.technique &&
+    previous.plan?.label === next.plan?.label &&
     previous.client.tattooZone === next.client.tattooZone &&
     previous.client.durationDays === next.client.durationDays &&
     previous.healing.day === next.healing.day &&

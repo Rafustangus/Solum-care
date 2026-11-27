@@ -7,7 +7,7 @@ PWA para que los estudios de tatuaje acompañen la curación de sus clientes: pl
 ## Qué incluye
 
 - **Vista cliente:** día y progreso de curación, checklist diario, galería de fotos, guía de cuidados, notas con el estudio, avisos e incidencias.
-- **Vista estudio:** lista de clientes con estado, alta de clientes, editor de plan (1–90 días), revisión de fotos, feed de evidencias y ajustes de marca, equipo y recordatorios.
+- **Vista estudio:** lista de clientes con estado, alta de clientes, editor de plan (1–90 días), pautas de curación reutilizables, revisión de fotos, feed de evidencias y ajustes de marca, equipo y recordatorios.
 - **Acceso:** los tatuadores crean la ficha del cliente y generan un código de activación de 6 dígitos; solo los clientes se registran con ese código.
 - **Foto obligatoria:** cuando toca evidencia, la app lo avisa y bloquea la navegación hasta subirla, con salida alternativa por WhatsApp o email.
 - **PWA:** instalable en móvil y escritorio, funcionamiento offline básico y notificaciones locales del sistema.
@@ -58,7 +58,7 @@ npm run preview
 src/components/  shell responsive, navegación y componentes de UI reutilizables
 src/features/     pantallas por rol: auth, cliente, estudio, notas y ajustes
 src/context/      estado global de datos, sesión, marca y notificaciones
-src/lib/          lógica pura: fechas, curación, validación, notas y datos demo
+src/lib/          lógica pura: fechas, curación, pautas del estudio, validación, notas y datos demo
 src/services/     persistencia local, foto y fachada de autenticación
 ```
 
@@ -74,6 +74,8 @@ Supabase está preparado pero desconectado; `src/services/auth.js` es la fachada
 
 Las fotos y los datos de la demo permanecen en el dispositivo: no se suben a ningún servidor. Los trabajadores del navegador permiten el uso offline básico; al borrar los datos del sitio se pierde la demo guardada.
 
-## Contribuir
+## Licencia
 
-Crea una rama desde `main`, abre un pull request y comprueba que `npm run verify` pasa antes de pedir revisión.
+Copyright (c) 2026 Rafael Alarcón (Rafustangus). Todos los derechos reservados.
+
+El código, el diseño, los logotipos, las imágenes y los textos de este proyecto son propiedad exclusiva de su autor. No se permite copiar, modificar, distribuir, publicar ni utilizar total o parcialmente el proyecto sin autorización escrita previa. Consulta [`LICENSE`](LICENSE).

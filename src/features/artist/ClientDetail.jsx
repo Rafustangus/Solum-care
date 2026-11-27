@@ -24,11 +24,11 @@ import { formatLongDate, relativeTime } from '../../lib/dates'
 import {
   CLIENT_STATUS_META,
   generateChecklist,
+  getCarePlan,
   getChecklistProgress,
   getClientStatus,
   getFrequency,
-  getHealingDay,
-  getTechnique
+  getHealingDay
 } from '../../lib/healing'
 import { whatsappUrl } from '../../lib/platform'
 import { PhotoReviewSheet } from './PhotoReviewSheet'
@@ -41,7 +41,7 @@ const PHOTO_STATUS = {
 }
 
 export function ClientDetail({ client, onBack, onOpenNotes }) {
-  const { resolveAlert } = useAppData()
+  const { resolveAlert, careTemplates } = useAppData()
   const { pushToast } = useNotifications()
   const [reviewTarget, setReviewTarget] = useState(null)
   const [planOpen, setPlanOpen] = useState(false)
@@ -51,10 +51,10 @@ export function ClientDetail({ client, onBack, onOpenNotes }) {
   const healing = getHealingDay(client.startDate, client.durationDays)
   const status = getClientStatus(client)
   const statusMeta = CLIENT_STATUS_META[status]
-  const technique = getTechnique(client.technique)
+  const plan = getCarePlan(client.technique, careTemplates)
   const frequency = getFrequency(client.photoFrequency)
   const day = Math.max(1, healing.day)
-  const tasks = generateChecklist(client.technique, day, client.durationDays)
+  const tasks = generateChecklist(plan, day, client.durationDays)
   const checklist = getChecklistProgress(client, day, tasks)
   const photos = [...(client.photos || [])].sort((a, b) => {
     if (Number(a.day) !== Number(b.day)) return Number(b.day) - Number(a.day)
@@ -173,7 +173,7 @@ export function ClientDetail({ client, onBack, onOpenNotes }) {
             </Button>
           </div>
           <dl className="space-y-2 text-sm">
-            <Row label="Técnica" value={technique.label} />
+            <Row label="Pauta" value={plan.label} />
             <Row label="Inicio" value={formatLongDate(client.startDate)} />
             <Row label="Duración" value={`${client.durationDays} días`} />
             <Row label="Fotos" value={frequency.label} />

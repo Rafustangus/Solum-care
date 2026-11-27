@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { AlertTriangle, Check, ShieldCheck, X } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
+import { useAppData } from '../../context/AppDataContext'
 import { cn } from '../../lib/cn'
-import { getTechnique, TECHNIQUES } from '../../lib/healing'
-import { GUIDE_CONTENT } from './guideContent'
-
-const METHOD_ORDER = ['second-skin', 'traditional-film', 'friction-zone']
+import { getGuideContent, getGuideOptions } from './guideContent'
 
 export function HealingGuide({ client }) {
+  const { careTemplates } = useAppData()
   const [method, setMethod] = useState(client?.technique || 'second-skin')
-  const guide = GUIDE_CONTENT[method] || GUIDE_CONTENT['second-skin']
-  const technique = getTechnique(method)
+  const options = getGuideOptions(careTemplates, client?.technique)
+  const guide = getGuideContent(method, careTemplates)
 
   return (
     <div className="phone-scroll mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-4 pb-6 pt-4 lg:pt-6">
@@ -27,15 +26,14 @@ export function HealingGuide({ client }) {
       </div>
 
       <div className="phone-scroll -mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
-        {METHOD_ORDER.map((id) => {
-          const option = TECHNIQUES[id]
-          const active = method === id
-          const mine = client?.technique === id
+        {options.map((option) => {
+          const active = method === option.id
+          const mine = client?.technique === option.id
           return (
             <button
-              key={id}
+              key={option.id}
               type="button"
-              onClick={() => setMethod(id)}
+              onClick={() => setMethod(option.id)}
               aria-pressed={active}
               className={cn(
                 'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition',
@@ -65,7 +63,7 @@ export function HealingGuide({ client }) {
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-olive-deep" />
           <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.14em] text-olive-deep">
-            {technique.label}
+            {guide.label}
           </p>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-coffee">{guide.intro}</p>

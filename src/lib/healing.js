@@ -155,6 +155,40 @@ const PHASE_TASKS = [
   }
 ]
 
+const PHOTO_TASK = {
+  id: 'check-photo',
+  label: 'Revisar el aspecto con buena luz',
+  detail: 'Si ves rojo intenso, pus o hinchazón, repórtalo.'
+}
+
+export const TEMPLATE_TASKS = [
+  ...Object.values(TECHNIQUE_TASKS).flat(),
+  ...PHASE_TASKS.map(({ id, label, detail }) => ({ id, label, detail })),
+  PHOTO_TASK
+]
+
+const TEMPLATE_TASK_BY_ID = new Map(TEMPLATE_TASKS.map((task) => [task.id, task]))
+
+export function getCarePlan(techniqueId, templates = []) {
+  const template = templates.find((item) => item.id === techniqueId)
+  if (template) {
+    return {
+      id: template.id,
+      label: template.name,
+      taskIds: (template.taskIds || []).filter((id) => TEMPLATE_TASK_BY_ID.has(id)),
+      isCustom: true
+    }
+  }
+
+  const id = TECHNIQUES[techniqueId] ? techniqueId : 'second-skin'
+  return {
+    id,
+    label: TECHNIQUES[id].label,
+    taskIds: (TECHNIQUE_TASKS[id] || []).map((task) => task.id),
+    isCustom: false
+  }
+}
+
 export function getTechnique(id) {
   return TECHNIQUES[id] || TECHNIQUES['second-skin']
 }
@@ -208,23 +242,33 @@ export function getHealingPhase(day, total) {
   return { id: 'maturation', label: 'Maduración' }
 }
 
-export function generateChecklist(techniqueId, day, total) {
-  const tasks = [...BASE_TASKS, ...(TECHNIQUE_TASKS[techniqueId] || [])]
-  const phaseTask = PHASE_TASKS.find((task) => task.when(day, total))
-  if (phaseTask) {
-    tasks.push({
-      id: phaseTask.id,
-      label: phaseTask.label,
-      detail: phaseTask.detail
-    })
+export function generateChecklist(planOrTechniqueId, day, total) {
+  const plan =
+    typeof planOrTechniqueId === 'string' || !planOrTechniqueId
+      ? getCarePlan(planOrTechniqueId)
+      : planOrTechniqueId
+  const tasks = [...BASE_TASKS]
+  const seen = new Set(tasks.map((task) => task.id))
+
+  function addTask(task) {
+    if (!task || seen.has(task.id)) return
+    tasks.push(task)
+    seen.add(task.id)
   }
 
-  if (day >= 4) {
-    tasks.push({
-      id: 'check-photo',
-      label: 'Revisar el aspecto con buena luz',
-      detail: 'Si ves rojo intenso, pus o hinchazón, repórtalo.'
-    })
+  ;(plan.taskIds || []).forEach((id) => addTask(TEMPLATE_TASK_BY_ID.get(id)))
+
+  if (!plan.isCustom) {
+    const phaseTask = PHASE_TASKS.find((task) => task.when(day, total))
+    if (phaseTask) {
+      addTask({
+        id: phaseTask.id,
+        label: phaseTask.label,
+        detail: phaseTask.detail
+      })
+    }
+
+    if (day >= 4) addTask(PHOTO_TASK)
   }
 
   return tasks

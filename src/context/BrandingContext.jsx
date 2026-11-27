@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { assetUrl } from '../lib/assets'
-import { loadBranding, saveBranding } from '../services/api'
+import { loadBranding, saveBranding } from '../services/repository'
 
 const DEFAULT_BRANDING = {
   studioName: 'Solum-care',
